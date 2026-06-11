@@ -28,6 +28,12 @@ enum ProjectStatus {
   FINALIZADO
 }
 
+enum ProposalStatus {
+  PENDIENTE
+  ACEPTADA
+  RECHAZADA
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -38,6 +44,7 @@ model User {
   role          Role?
   profile       Profile?
   projects      Project[]
+  proposals     Proposal[]
 
   accounts      Account[]
   sessions      Session[]
@@ -66,8 +73,23 @@ model Project {
   budget      Float?
   category    ProjectCategory
   status      ProjectStatus   @default(ABIERTO)
+  proposals   Proposal[]
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+}
+
+model Proposal {
+  id           String         @id @default(cuid())
+  projectId    String
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  freelancerId String
+  freelancer   User           @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+  bidAmount    Float
+  deliveryDays Int
+  coverLetter  String
+  status       ProposalStatus @default(PENDIENTE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
 
 model Account {
