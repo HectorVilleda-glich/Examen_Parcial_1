@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-workana-blue: #007bd2;
+  --color-workana-blue-dark: #0066b3;
+  --color-workana-blue-light: #e8f4fc;
+  --color-workana-gray-50: #f7f9fb;
+  --color-workana-gray-100: #eef2f6;
+  --color-workana-gray-200: #dde3ea;
+  --color-workana-gray-500: #6b7280;
+  --color-workana-gray-700: #374151;
+  --color-workana-gray-900: #1f2937;
+  --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: var(--color-workana-gray-900);
+  font-family: var(--font-sans);
 }

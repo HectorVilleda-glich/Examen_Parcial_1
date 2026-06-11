@@ -2,11 +2,21 @@
 
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
+import { AuthLayout } from "@/components/auth/auth-layout";
+import {
+  AuthDivider,
+  AuthError,
+  AuthInput,
+  AuthSubmitButton,
+} from "@/components/auth/auth-form";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const registered = searchParams.get("registered") === "1";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -28,72 +38,72 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Credenciales inválidas.");
+      setError("Correo o contraseña incorrectos. Intenta de nuevo.");
       return;
     }
 
-    router.push("/");
+    router.push("/dashboard");
     router.refresh();
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-8">
-      <div className="w-full max-w-md rounded-2xl border border-neutral-200 p-8 shadow-sm dark:border-neutral-800">
-        <h1 className="text-2xl font-bold">Iniciar sesión</h1>
-        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-          Accede con tu email y contraseña.
-        </p>
-
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-950"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium"
-            >
-              Contraseña
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-950"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+    <AuthLayout
+      variant="login"
+      title="Inicia sesión"
+      subtitle="Ingresa a tu cuenta para continuar."
+      footer={
+        <>
+          ¿Aún no tienes cuenta?{" "}
+          <Link
+            href="/register"
+            className="font-semibold text-workana-blue hover:text-workana-blue-dark"
           >
-            {loading ? "Ingresando..." : "Ingresar"}
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-neutral-600 dark:text-neutral-400">
-          ¿No tienes cuenta?{" "}
-          <Link href="/register" className="font-medium underline">
             Regístrate
           </Link>
-        </p>
-      </div>
-    </main>
+        </>
+      }
+    >
+      {registered && (
+        <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+          Cuenta creada correctamente. Ya puedes iniciar sesión.
+        </div>
+      )}
+
+      <GoogleSignInButton callbackUrl="/dashboard" />
+
+      <AuthDivider />
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <AuthInput
+          id="email"
+          name="email"
+          label="Correo electrónico"
+          type="email"
+          placeholder="tu@email.com"
+        />
+
+        <AuthInput
+          id="password"
+          name="password"
+          label="Contraseña"
+          type="password"
+          placeholder="••••••••"
+        />
+
+        {error && <AuthError message={error} />}
+
+        <AuthSubmitButton loading={loading} loadingText="Ingresando...">
+          Ingresar
+        </AuthSubmitButton>
+      </form>
+    </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

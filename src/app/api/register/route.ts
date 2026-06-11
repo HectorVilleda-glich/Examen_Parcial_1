@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { isUserRole } from "@/lib/roles";
 
 export async function POST(request: Request) {
   try {
@@ -8,13 +10,21 @@ export async function POST(request: Request) {
       name?: string;
       email?: string;
       password?: string;
+      role?: string;
     };
 
-    const { name, email, password } = body;
+    const { name, email, password, role } = body;
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !role) {
       return NextResponse.json(
-        { error: "Nombre, email y contraseña son obligatorios." },
+        { error: "Nombre, email, contraseña y tipo de cuenta son obligatorios." },
+        { status: 400 },
+      );
+    }
+
+    if (!isUserRole(role)) {
+      return NextResponse.json(
+        { error: "El tipo de cuenta seleccionado no es válido." },
         { status: 400 },
       );
     }
@@ -32,7 +42,7 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "Ya existe una cuenta con ese email." },
+        { error: "Ya existe una cuenta con ese correo electrónico." },
         { status: 409 },
       );
     }
@@ -44,6 +54,7 @@ export async function POST(request: Request) {
         name,
         email,
         password: hashedPassword,
+        role: role as UserRole,
       },
     });
 

@@ -92,7 +92,44 @@ prisma/
 
 ## Autenticación
 
-- Registro en `/register`
-- Inicio de sesión en `/login`
-- Proveedor: credenciales (email + contraseña)
-- Sesiones JWT con Auth.js v5
+- **Correo y contraseña** — registro en `/register`, login en `/login`
+- **Google OAuth** — botón "Continuar con Google" (requiere `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`)
+- **Roles de usuario** — `FREELANCER` o `CLIENT` (Cliente/Empresa)
+- Usuarios de Google sin rol son redirigidos a `/onboarding/role`
+- Rutas protegidas con middleware: usuarios autenticados no pueden volver a `/login` ni `/register`
+
+## Flujo de rutas
+
+| Ruta | Acceso |
+|------|--------|
+| `/` | Público (redirige al dashboard si hay sesión) |
+| `/login`, `/register` | Solo invitados |
+| `/onboarding/role` | Sesión activa sin rol (p. ej. Google) |
+| `/dashboard` | Sesión activa con rol asignado |
+
+## Google OAuth
+
+1. Crea credenciales en [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. URI de redirección autorizada: `http://localhost:3000/api/auth/callback/google`
+3. En producción: `https://tu-dominio.vercel.app/api/auth/callback/google`
+4. Agrega las variables en `.env` y en Vercel
+
+## Modelo User (Prisma)
+
+```prisma
+enum UserRole {
+  FREELANCER
+  CLIENT
+}
+
+model User {
+  role UserRole?  // Freelancer o Cliente/Empresa
+  // ... campos Auth.js
+}
+```
+
+Después de cambiar el esquema:
+
+```bash
+npm run db:push
+```

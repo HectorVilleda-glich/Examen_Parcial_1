@@ -1,84 +1,59 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { FormEvent, useState } from "react";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import {
-  AuthDivider,
   AuthError,
-  AuthInput,
   AuthSubmitButton,
 } from "@/components/auth/auth-form";
-import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles";
 import { UserRole } from "@prisma/client";
 
 const ROLES: UserRole[] = ["FREELANCER", "CLIENT"];
 
-export default function RegisterPage() {
+export default function OnboardingRolePage() {
   const router = useRouter();
+  const { update } = useSession();
+  const [selectedRole, setSelectedRole] = useState<UserRole>("FREELANCER");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>("FREELANCER");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError(null);
 
-    const formData = new FormData(event.currentTarget);
-
-    const response = await fetch("/api/register", {
-      method: "POST",
+    const response = await fetch("/api/user/role", {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: formData.get("name"),
-        email: formData.get("email"),
-        password: formData.get("password"),
-        role: selectedRole,
-      }),
+      body: JSON.stringify({ role: selectedRole }),
     });
-
-    setLoading(false);
 
     if (!response.ok) {
       const data = (await response.json()) as { error?: string };
-      setError(data.error ?? "No se pudo crear la cuenta.");
+      setError(data.error ?? "No se pudo guardar tu tipo de cuenta.");
+      setLoading(false);
       return;
     }
 
-    router.push("/login?registered=1");
+    await update();
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (
     <AuthLayout
       variant="register"
-      title="Crea tu cuenta"
-      subtitle="Regístrate como freelancer o como cliente/empresa."
-      footer={
-        <>
-          ¿Ya tienes cuenta?{" "}
-          <Link
-            href="/login"
-            className="font-semibold text-workana-blue hover:text-workana-blue-dark"
-          >
-            Inicia sesión
-          </Link>
-        </>
-      }
+      title="Completa tu perfil"
+      subtitle="Indica si te registraste como freelancer o como cliente/empresa."
+      footer={<span className="text-workana-gray-500">Un paso más y listo.</span>}
     >
-      <GoogleSignInButton
-        label="Registrarse con Google"
-        callbackUrl="/onboarding/role"
-      />
-
-      <AuthDivider />
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <fieldset className="space-y-3">
           <legend className="mb-1 block text-sm font-medium text-workana-gray-700">
-            ¿Cómo quieres usar la plataforma?
+            Tipo de cuenta
           </legend>
           {ROLES.map((role) => (
             <label
@@ -109,34 +84,10 @@ export default function RegisterPage() {
           ))}
         </fieldset>
 
-        <AuthInput
-          id="name"
-          name="name"
-          label="Nombre completo"
-          placeholder="Tu nombre"
-        />
-
-        <AuthInput
-          id="email"
-          name="email"
-          label="Correo electrónico"
-          type="email"
-          placeholder="tu@email.com"
-        />
-
-        <AuthInput
-          id="password"
-          name="password"
-          label="Contraseña"
-          type="password"
-          minLength={6}
-          placeholder="Mínimo 6 caracteres"
-        />
-
         {error && <AuthError message={error} />}
 
-        <AuthSubmitButton loading={loading} loadingText="Creando cuenta...">
-          Crear cuenta
+        <AuthSubmitButton loading={loading} loadingText="Guardando...">
+          Continuar al dashboard
         </AuthSubmitButton>
       </form>
     </AuthLayout>
