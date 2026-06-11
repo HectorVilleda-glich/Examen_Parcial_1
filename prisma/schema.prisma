@@ -3,8 +3,29 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  FREELANCER
+  CLIENTE
+}
+
+enum ProjectCategory {
+  PROGRAMACION
+  DISENO
+  MARKETING
+  CONTENIDO
+  SOPORTE
+  OTRO
+}
+
+enum ProjectStatus {
+  ABIERTO
+  EN_PROGRESO
+  FINALIZADO
 }
 
 model User {
@@ -14,10 +35,39 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  role          Role?
+  profile       Profile?
+  projects      Project[]
+
   accounts      Account[]
   sessions      Session[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model Profile {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String?
+  bio        String?
+  hourlyRate Float?
+  country    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Project {
+  id          String          @id @default(cuid())
+  clientId    String
+  client      User            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  budget      Float?
+  category    ProjectCategory
+  status      ProjectStatus   @default(ABIERTO)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 }
 
 model Account {
