@@ -1,6 +1,8 @@
+import type { Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { isRole } from "@/lib/roles";
 
 export async function POST(request: Request) {
   try {
@@ -8,9 +10,11 @@ export async function POST(request: Request) {
       name?: string;
       email?: string;
       password?: string;
+      role?: string;
     };
 
     const { name, email, password } = body;
+    const role = isRole(body.role ?? "") ? (body.role as Role) : null;
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -22,6 +26,13 @@ export async function POST(request: Request) {
     if (password.length < 6) {
       return NextResponse.json(
         { error: "La contraseña debe tener al menos 6 caracteres." },
+        { status: 400 },
+      );
+    }
+
+    if (role && !isRole(role)) {
+      return NextResponse.json(
+        { error: "El tipo de cuenta seleccionado no es válido." },
         { status: 400 },
       );
     }
@@ -44,6 +55,7 @@ export async function POST(request: Request) {
         name,
         email,
         password: hashedPassword,
+        role,
       },
     });
 
