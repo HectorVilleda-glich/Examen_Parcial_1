@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Examen I",
-  description: "Aplicación web con Next.js, PostgreSQL, Prisma y Auth.js",
+  title: "WorkClone - Encuentra talento freelance",
+  description: "Plataforma para conectar freelancers con empresas. Publica proyectos, recibe propuestas y encuentra el talento ideal.",
 };
 
 export default function RootLayout({

@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { FormEvent, useState } from "react";
+import { AuthLayout } from "@/components/auth/auth-layout";
+import { AuthError, AuthInput, AuthSubmitButton } from "@/components/auth/auth-form";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -26,89 +29,40 @@ export default function RegisterPage() {
       }),
     });
 
-    setLoading(false);
-
     if (!response.ok) {
+      setLoading(false);
       const data = (await response.json()) as { error?: string };
-      setError(data.error ?? "No se pudo crear la cuenta.");
+      setError(data.error ?? "No se pudo crear la cuenta. Intenta de nuevo.");
       return;
     }
 
-    router.push("/login");
+    await signIn("credentials", {
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      redirect: false,
+    });
+
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-8">
-      <div className="w-full max-w-md rounded-2xl border border-neutral-200 p-8 shadow-sm dark:border-neutral-800">
-        <h1 className="text-2xl font-bold">Registrarse</h1>
-        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-          Crea una cuenta para acceder al sistema.
-        </p>
-
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="name" className="mb-1 block text-sm font-medium">
-              Nombre
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              required
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-950"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-950"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium"
-            >
-              Contraseña
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              minLength={6}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-950"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
-          >
-            {loading ? "Creando cuenta..." : "Crear cuenta"}
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-neutral-600 dark:text-neutral-400">
-          ¿Ya tienes cuenta?{" "}
-          <Link href="/login" className="font-medium underline">
-            Inicia sesión
+    <AuthLayout variant="register" title="Crear cuenta gratuita" subtitle="Unete a WorkClone y comienza a trabajar."
+      footer={
+        <span>
+          &iquest;Ya tienes cuenta?{" "}
+          <Link href="/login" className="font-semibold text-[#007bd2] hover:text-[#0066b3] underline">
+            Inicia sesion
           </Link>
-        </p>
-      </div>
-    </main>
+        </span>
+      }>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthInput id="name" name="name" label="Nombre completo" type="text" placeholder="Ej: Juan Perez" />
+        <AuthInput id="email" name="email" label="Correo electronico" type="email" placeholder="tu@correo.com" />
+        <AuthInput id="password" name="password" label="Contrasena" type="password" minLength={6} placeholder="Minimo 6 caracteres" />
+        {error && <AuthError message={error} />}
+        <AuthSubmitButton loading={loading} loadingText="Creando cuenta...">Crear cuenta gratis</AuthSubmitButton>
+      </form>
+    </AuthLayout>
   );
 }

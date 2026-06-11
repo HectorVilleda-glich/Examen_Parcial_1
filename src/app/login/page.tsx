@@ -2,11 +2,15 @@
 
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useState, Suspense } from "react";
+import { AuthLayout } from "@/components/auth/auth-layout";
+import { AuthError, AuthInput, AuthSubmitButton } from "@/components/auth/auth-form";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const registered = searchParams.get("registered");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -28,72 +32,43 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Credenciales inválidas.");
+      setError("Credenciales invalidas. Verifica tu email y contrasena.");
       return;
     }
 
-    router.push("/");
+    router.push("/dashboard");
     router.refresh();
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-8">
-      <div className="w-full max-w-md rounded-2xl border border-neutral-200 p-8 shadow-sm dark:border-neutral-800">
-        <h1 className="text-2xl font-bold">Iniciar sesión</h1>
-        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-          Accede con tu email y contraseña.
-        </p>
-
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-950"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium"
-            >
-              Contraseña
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-950"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
-          >
-            {loading ? "Ingresando..." : "Ingresar"}
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-neutral-600 dark:text-neutral-400">
-          ¿No tienes cuenta?{" "}
-          <Link href="/register" className="font-medium underline">
-            Regístrate
+    <AuthLayout variant="login" title="Iniciar sesion" subtitle="Accede a tu cuenta para gestionar proyectos y propuestas."
+      footer={
+        <span>
+          &iquest;No tienes cuenta?{" "}
+          <Link href="/register" className="font-semibold text-[#007bd2] hover:text-[#0066b3] underline">
+            Registrate
           </Link>
-        </p>
-      </div>
-    </main>
+        </span>
+      }>
+      {registered && (
+        <div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-800 shadow-sm">
+          Cuenta creada con exito. Ahora inicia sesion.
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthInput id="email" name="email" label="Correo electronico" type="email" placeholder="tu@correo.com" />
+        <AuthInput id="password" name="password" label="Contrasena" type="password" placeholder="Ingresa tu contrasena" />
+        {error && <AuthError message={error} />}
+        <AuthSubmitButton loading={loading} loadingText="Ingresando...">Iniciar sesion</AuthSubmitButton>
+      </form>
+    </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
